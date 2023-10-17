@@ -137,7 +137,11 @@ macro_rules! println {
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
-    WRITER.lock().write_fmt(args).unwrap();
+    use x86_64::instructions::interrupts;
+
+    interrupts::without_interrupts(||{
+        WRITER.lock().write_fmt(args).unwrap();
+    })
 }
 #[macro_export]
 macro_rules! error {
@@ -153,11 +157,33 @@ macro_rules! errorln {
 #[doc(hidden)]
 pub fn _error(args: fmt::Arguments) {
     use core::fmt::Write;
-    let mut writer = WRITER.lock();
-    let prev_color = writer.color_code;
-    writer.color_code = ColorCode::new(Red, Black);
-    writer.write_fmt(args).unwrap();
-    writer.color_code = prev_color;
+    use x86_64::instructions::interrupts;
+    interrupts::without_interrupts(||{
+        let mut writer = WRITER.lock();
+        let prev_color = writer.color_code;
+        writer.color_code = ColorCode::new(Red, Black);
+        writer.write_fmt(args).unwrap();
+        writer.color_code = prev_color;
+    });
+}
+
+pub fn timer_tick() {
+    use x86_64::instructions::interrupts;
+    interrupts::without_interrupts(||{
+        let mut writer = WRITER.lock();
+        if writer.buffer.chars[2][1].read().ascii_character == b'@' {
+            writer.buffer.chars[2][1].write(ScreenChar {
+                ascii_character: b' ',
+                color_code: ColorCode::new(Color::Red, Black),
+            });
+        }
+        else{
+            writer.buffer.chars[2][1].write(ScreenChar {
+                ascii_character: b'@',
+                color_code: ColorCode::new(Color::Green, Black),
+            });
+        }
+    })
 }
 
 #[test_case]

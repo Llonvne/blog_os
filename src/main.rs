@@ -5,7 +5,7 @@
 #![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
-use blog_os::println;
+use blog_os::{println, hlt_loop};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -17,22 +17,21 @@ pub extern "C" fn _start() -> ! {
     blog_os::display::line();
     println!("\n");
 
-    // unsafe {
-    //     *(0xdeadbeef as *mut u8) = 42;
-    // };
 
     #[cfg(test)]
     test_main();
 
-    loop {}
+    hlt_loop();
 }
+
+
 
 /// This function is called on panic.
 #[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    hlt_loop();
 }
 
 #[cfg(test)]
