@@ -171,16 +171,20 @@ pub fn timer_tick() {
     use x86_64::instructions::interrupts;
     interrupts::without_interrupts(||{
         let mut writer = WRITER.lock();
-        if writer.buffer.chars[2][1].read().ascii_character == b'@' {
-            writer.buffer.chars[2][1].write(ScreenChar {
+
+        let row = BUFFER_HEIGHT - 1;
+        let col = writer.column_position;
+
+        if writer.buffer.chars[row][col].read().ascii_character == b'_' {
+            writer.buffer.chars[row][col].write(ScreenChar {
                 ascii_character: b' ',
-                color_code: ColorCode::new(Color::Red, Black),
+                color_code: ColorCode::new(Color::Yellow, Black),
             });
         }
         else{
-            writer.buffer.chars[2][1].write(ScreenChar {
-                ascii_character: b'@',
-                color_code: ColorCode::new(Color::Green, Black),
+            writer.buffer.chars[row][col].write(ScreenChar {
+                ascii_character: b'_',
+                color_code: ColorCode::new(Color::Yellow, Black),
             });
         }
     })
